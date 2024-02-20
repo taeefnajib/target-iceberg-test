@@ -41,6 +41,8 @@ class IcebergSink(BatchSink):
         Args:
             context: Stream partition or context dictionary.
         """
+        self.logger.warn('THIS IS THE LOGGING OF THE 3 SCHEMA')
+        self.logger.warn('==============================================')
 
         # Create pyarrow df
         fields_to_drop = ["_sdc_deleted_at", "_sdc_table_version"]
@@ -96,7 +98,11 @@ class IcebergSink(BatchSink):
             # TODO: Handle schema evolution - compare existing table schema with singer schema (converted to pyiceberg schema)
         except NoSuchTableError as e:
             # Table doesn't exist, so create it
+            self.logger.info('SINGER SCHEMA')
+            self.logger.info(singer_schema)
             table_schema = singer_to_pyiceberg_schema(self, singer_schema)
+            self.logger.info('PYICEBERG SCHEMA')
+            self.logger.info(table_schema)
             table = catalog.create_table(table_id, schema=table_schema)
             self.logger.info(f"Table '{table_id}' created")
 
