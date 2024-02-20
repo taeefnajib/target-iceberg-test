@@ -49,10 +49,12 @@ def singer_to_pyarrow_schema(self, singer_schema: dict) -> PyarrowSchema:
         elif "boolean" in type:
             return pa.bool_()
         elif "array" in type:
+            # Handle nested arrays by recursively calling get_pyarrow_schema_from_array
             return pa.list_(
                 get_pyarrow_schema_from_array(items=items.get("items"), level=level)
             )
         elif "object" in type:
+            # Handle nested objects by recursively calling get_pyarrow_schema_from_object
             return pa.struct(
                 get_pyarrow_schema_from_object(
                     properties=items.get("properties"), level=level + 1
@@ -112,19 +114,13 @@ def singer_to_pyarrow_schema(self, singer_schema: dict) -> PyarrowSchema:
                 items = val.get("items")
                 if items:
                     item_type = get_pyarrow_schema_from_array(items=items, level=level)
-                    if item_type == pa.null():
-                        self.logger.warn(
-                            f"""key: {key} is defined as list of null, while this would be
-                                correct for list of all null but it is better to define
-                                exact item types for the list, if not null."""
-                        )
                     fields.append(
                         pa.field(key, pa.list_(item_type), metadata=field_metadata)
                     )
                 else:
                     self.logger.warn(
                         f"""key: {key} is defined as list of null, while this would be
-                            correct for list of all null but it is better to define
+                            correct for a list of all null but it is better to define
                             exact item types for the list, if not null."""
                     )
                     fields.append(
