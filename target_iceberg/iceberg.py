@@ -155,9 +155,14 @@ def singer_to_pyarrow_schema(self, singer_schema: dict) -> PyarrowSchema:
 
 def singer_to_pyiceberg_schema(self, singer_schema: dict) -> PyicebergSchema:
     """Convert singer tap json schema to pyiceberg schema via pyarrow schema."""
+    self.logger.warn('THIS IS THE LOGGING OF THE 3 SCHEMA')
+    self.logger.warn('==============================================')
+    self.logger.info('SINGER SCHEMA')
     self.logger.info(singer_schema)
     pyarrow_schema = singer_to_pyarrow_schema(self, singer_schema)
+    self.logger.info('PYARROW SCHEMA')
     self.logger.info(pyarrow_schema)
     pyiceberg_schema = pyarrow_to_schema(pyarrow_schema)
+    self.logger.info('PYICEBERG SCHEMA')
     self.logger.info(pyiceberg_schema)
     return pyiceberg_schema
