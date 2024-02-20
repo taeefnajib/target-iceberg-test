@@ -49,12 +49,10 @@ def singer_to_pyarrow_schema(self, singer_schema: dict) -> PyarrowSchema:
         elif "boolean" in type:
             return pa.bool_()
         elif "array" in type:
-            # Handle nested arrays by recursively calling get_pyarrow_schema_from_array
             return pa.list_(
                 get_pyarrow_schema_from_array(items=items.get("items"), level=level)
             )
         elif "object" in type:
-            # Handle nested objects by recursively calling get_pyarrow_schema_from_object
             return pa.struct(
                 get_pyarrow_schema_from_object(
                     properties=items.get("properties"), level=level + 1
@@ -114,13 +112,19 @@ def singer_to_pyarrow_schema(self, singer_schema: dict) -> PyarrowSchema:
                 items = val.get("items")
                 if items:
                     item_type = get_pyarrow_schema_from_array(items=items, level=level)
+                    if item_type == pa.null():
+                        self.logger.warn(
+                            f"""key: {key} is defined as list of null, while this would be
+                                correct for list of all null but it is better to define
+                                exact item types for the list, if not null."""
+                        )
                     fields.append(
                         pa.field(key, pa.list_(item_type), metadata=field_metadata)
                     )
                 else:
                     self.logger.warn(
                         f"""key: {key} is defined as list of null, while this would be
-                            correct for a list of all null but it is better to define
+                            correct for list of all null but it is better to define
                             exact item types for the list, if not null."""
                     )
                     fields.append(
@@ -128,6 +132,7 @@ def singer_to_pyarrow_schema(self, singer_schema: dict) -> PyarrowSchema:
                     )
             elif "object" in type:
                 prop = val.get("properties")
+                # Recursively handle nested properties
                 inner_fields = get_pyarrow_schema_from_object(
                     properties=prop, level=level + 1
                 )
@@ -151,16 +156,6 @@ def singer_to_pyarrow_schema(self, singer_schema: dict) -> PyarrowSchema:
 
 def singer_to_pyiceberg_schema(self, singer_schema: dict) -> PyicebergSchema:
     """Convert singer tap json schema to pyiceberg schema via pyarrow schema."""
-    try:
-        # Convert Singer schema to PyArrow schema
-        pyarrow_schema = singer_to_pyarrow_schema(self, singer_schema)
-        
-        # Convert PyArrow schema to PyIceberg schema
-        pyiceberg_schema = pyarrow_to_schema(pyarrow_schema)
-        
-        return pyiceberg_schema
-    except Exception as e:
-        # Handle schema conversion errors
-        error_message = f"Error converting Singer schema to PyIceberg schema: {str(e)}"
-        # Log error message or raise exception as appropriate
-        raise ValueError(error_message)
+    pyarrow_schema = singer_to_pyarrow_schema(self, singer_schema)
+    pyiceberg_schema = pyarrow_to_schema(pyarrow_schema)
+    return pyiceberg_schema
