@@ -18,7 +18,6 @@ from .iceberg import singer_to_pyiceberg_schema
 class IcebergSink(BatchSink):
     """Iceberg target sink class."""
 
-    self.logger.info("LOGGING STARTED==========")
     max_size = 10000  # Max records to write in one batch
 
     def __init__(
@@ -43,6 +42,7 @@ class IcebergSink(BatchSink):
         Args:
             context: Stream partition or context dictionary.
         """
+        self.logger.info("LOGGING STARTED==========")
         # Create pyarrow df
         fields_to_drop = ["_sdc_deleted_at", "_sdc_table_version"]
         df = pa.Table.from_pylist(context["records"])
