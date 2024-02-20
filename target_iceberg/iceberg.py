@@ -155,8 +155,16 @@ def singer_to_pyarrow_schema(self, singer_schema: dict) -> PyarrowSchema:
 
 def singer_to_pyiceberg_schema(self, singer_schema: dict) -> PyicebergSchema:
     """Convert singer tap json schema to pyiceberg schema via pyarrow schema."""
-    pyarrow_schema = singer_to_pyarrow_schema(self, singer_schema)
-    self.logger.info('PYARROW SCHEMA')
-    self.logger.info(pyarrow_schema)
-    pyiceberg_schema = pyarrow_to_schema(pyarrow_schema)
-    return pyiceberg_schema
+    try:
+        # Convert Singer schema to PyArrow schema
+        pyarrow_schema = singer_to_pyarrow_schema(self, singer_schema)
+        
+        # Convert PyArrow schema to PyIceberg schema
+        pyiceberg_schema = pyarrow_to_schema(pyarrow_schema)
+        
+        return pyiceberg_schema
+    except Exception as e:
+        # Handle schema conversion errors
+        error_message = f"Error converting Singer schema to PyIceberg schema: {str(e)}"
+        # Log error message or raise exception as appropriate
+        raise ValueError(error_message)
