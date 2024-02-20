@@ -88,22 +88,24 @@ class IcebergSink(BatchSink):
         singer_schema = self.schema
         singer_schema_narrow = singer_schema
         singer_schema_narrow["properties"] = {x: singer_schema["properties"][x] for x in singer_schema["properties"] if x not in fields_to_drop}
-        self.logger.warn('<<<SINGER SCHEMA>>>')
-        self.logger.info(json.dumps(singer_schema, indent=2))
+        self.logger.info("<SINGER SCHEMA>")
+        self.logger.info(str(singer_schema))
+        self.logger.info("<SINGER SCHEMA NARROW>")
+        self.logger.info(str(singer_schema_narrow))
         try:
             table = catalog.load_table(table_id)
             self.logger.info(f"Table '{table_id}' loaded")
-            self.logger.info('<<SINGER SCHEMA>>')
+            self.logger.info("<SINGER SCHEMA>")
             self.logger.info(json.dumps(singer_schema, indent=2))
 
             # TODO: Handle schema evolution - compare existing table schema with singer schema (converted to pyiceberg schema)
         except NoSuchTableError as e:
             # Table doesn't exist, so create it
-            self.logger.info('<SINGER SCHEMA>')
-            self.logger.info(json.dumps(singer_schema, indent=2))
+            self.logger.info("<SINGER SCHEMA>")
+            self.logger.info(str(singer_schema))
             table_schema = singer_to_pyiceberg_schema(self, singer_schema)
-            self.logger.info('PYICEBERG SCHEMA')
-            self.logger.info(table_schema)
+            self.logger.info('<PYICEBERG SCHEMA>')
+            self.logger.info(str(table_schema))
             table = catalog.create_table(table_id, schema=table_schema)
             self.logger.info(f"Table '{table_id}' created")
 
