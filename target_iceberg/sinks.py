@@ -18,6 +18,7 @@ from .iceberg import singer_to_pyiceberg_schema
 class IcebergSink(BatchSink):
     """Iceberg target sink class."""
 
+    self.logger.info("LOGGING STARTED==========")
     max_size = 10000  # Max records to write in one batch
 
     def __init__(
