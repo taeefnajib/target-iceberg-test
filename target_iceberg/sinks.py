@@ -97,9 +97,9 @@ class IcebergSink(BatchSink):
             # TODO: Handle schema evolution - compare existing table schema with singer schema (converted to pyiceberg schema)
         except NoSuchTableError as e:
             # Table doesn't exist, so create it
-            table_schema = singer_to_pyiceberg_schema(self, singer_schema_narrow)
+            table_schema = singer_to_pyiceberg_schema(self, singer_schema)
             table = catalog.create_table(table_id, schema=table_schema)
             self.logger.info(f"Table '{table_id}' created")
 
         # Add data to the table
-        table.append(df_narrow)
+        table.append(df)
