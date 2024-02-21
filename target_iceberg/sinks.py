@@ -102,4 +102,4 @@ class IcebergSink(BatchSink):
             self.logger.info(f"Table '{table_id}' created")
 
         # Add data to the table
-        table.append(df)
+        table.append(df_narrow)
