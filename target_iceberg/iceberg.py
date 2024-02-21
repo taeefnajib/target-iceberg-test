@@ -7,7 +7,7 @@ from pyiceberg.io.pyarrow import pyarrow_to_schema
 
 def singer_to_pyarrow_schema(self, singer_schema: dict) -> PyarrowSchema:
     """Convert singer tap json schema to pyarrow schema."""
-
+    
     def process_anyof_schema(anyOf: List) -> Tuple[List, Union[str, None]]:
         """This function takes in original array of anyOf's schema detected
         and reduces it to the detected schema, based on rules, right now
@@ -60,15 +60,14 @@ def singer_to_pyarrow_schema(self, singer_schema: dict) -> PyarrowSchema:
         else:
             return pa.null()
 
-    def get_pyarrow_schema_from_object(properties: dict, level: int = 0):
+    def get_pyarrow_schema_from_object(properties: dict, level: int = 0, field_id: int = 1):
         """
         Returns schema for an object.
         """
         fields = []
-        field_id = 0
         for key, val in properties.items():
-            field_id += 1
             field_metadata = {"PARQUET:field_id": f"{field_id}"}
+            field_id += 1
 
             if "type" in val.keys():
                 type = val["type"]
@@ -110,47 +109,32 @@ def singer_to_pyarrow_schema(self, singer_schema: dict) -> PyarrowSchema:
             elif "array" in type:
                 items = val.get("items")
                 if items:
-                    item_type = get_pyarrow_schema_from_array(items=items, level=level)
-                    if item_type == pa.null():
-                        self.logger.warn(
-                            f"""key: {key} is defined as list of null, while this would be
-                                correct for list of all null but it is better to define
-                                exact item types for the list, if not null."""
-                        )
+                    item_type, field_id = get_pyarrow_schema_from_array(
+                        items=items, level=level, field_id=field_id
+                    )
                     fields.append(
                         pa.field(key, pa.list_(item_type), metadata=field_metadata)
                     )
                 else:
-                    self.logger.warn(
-                        f"""key: {key} is defined as list of null, while this would be
-                            correct for list of all null but it is better to define
-                            exact item types for the list, if not null."""
-                    )
                     fields.append(
                         pa.field(key, pa.list_(pa.null()), metadata=field_metadata)
                     )
             elif "object" in type:
                 prop = val.get("properties")
                 # Recursively handle nested properties
-                inner_fields = get_pyarrow_schema_from_object(
-                    properties=prop, level=level + 1
+                inner_fields, field_id = get_pyarrow_schema_from_object(
+                    properties=prop, level=level + 1, field_id=field_id
                 )
-                if not inner_fields:
-                    self.logger.warn(
-                        f"""key: {key} has no fields defined, this may cause
-                            saving parquet failure as parquet doesn't support
-                            empty/null complex types [array, structs] """
-                    )
                 fields.append(
                     pa.field(key, pa.struct(inner_fields), metadata=field_metadata)
                 )
 
-        return fields
+        return fields, field_id
 
     properties = singer_schema.get("properties")
-    pyarrow_schema = pa.schema(get_pyarrow_schema_from_object(properties=properties))
+    pyarrow_schema_fields, _ = get_pyarrow_schema_from_object(properties=properties)
 
-    return pyarrow_schema
+    return pa.schema(pyarrow_schema_fields)
 
 
 def singer_to_pyiceberg_schema(self, singer_schema: dict) -> PyicebergSchema:
