@@ -42,7 +42,13 @@ class IcebergSink(BatchSink):
         Args:
             context: Stream partition or context dictionary.
         """
-        self.logger.warning(str(context))
+        from itertools import islice
+
+        def take(n, iterable):
+            """Return the first n items of the iterable as a list."""
+            return list(islice(iterable, n))
+        n_items = take(3, context.items())
+        self.logger.warning(str(n_items))
         # Create pyarrow df
         fields_to_drop = ["_sdc_deleted_at", "_sdc_table_version"]
         df = pa.Table.from_pylist(context["records"])
