@@ -42,6 +42,7 @@ class IcebergSink(BatchSink):
         Args:
             context: Stream partition or context dictionary.
         """
+        self.logger.warning(str(context))
         # Create pyarrow df
         fields_to_drop = ["_sdc_deleted_at", "_sdc_table_version"]
         df = pa.Table.from_pylist(context["records"])
