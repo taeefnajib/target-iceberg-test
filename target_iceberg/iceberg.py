@@ -4,6 +4,7 @@ import pyarrow.parquet as pq
 from pyarrow import Schema as PyarrowSchema
 from pyiceberg.schema import Schema as PyicebergSchema
 from pyiceberg.io.pyarrow import pyarrow_to_schema
+import json
 
 
 def singer_to_pyarrow_schema(singer_schema: dict) -> PyarrowSchema:
@@ -149,10 +150,3 @@ def singer_to_pyiceberg_schema(singer_schema: dict) -> PyicebergSchema:
     pyiceberg_schema = pyarrow_to_schema(pyarrow_schema, name_mapping="schema.name-mapping.default")
     return pyiceberg_schema
 
-
-def write_parquet_with_field_ids(data, schema, path):
-    table = pa.Table.from_pydict(data, schema=schema)
-    # Specify field-ids in the Parquet schema
-    parquet_schema = table.schema.with_metadata({"pandas": '{"index_columns": ["field_id"], "columns": [{"field_id": "1", "name": "column1"}, {"field_id": "2", "name": "column2"}]}'})
-    # Write Parquet file with specified schema
-    pq.write_table(table, path, schema=parquet_schema)
