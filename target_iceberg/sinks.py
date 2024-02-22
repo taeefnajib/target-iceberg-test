@@ -52,7 +52,7 @@ class IcebergSink(BatchSink):
         records = context.get("records", [])
 
         # Define fields to drop from the schema
-        fields_to_drop = ["_sdc_deleted_at", "_sdc_table_version"]
+        fields_to_drop = ["_sdc_deleted_at", "_sdc_table_version", "_sdc_extracted_at", "_sdc_received_at", "_sdc_batched_at", "_sdc_sequence", "_sdc_sync_started_at"]
 
         # Drop unnecessary fields from the schema
         singer_schema_narrow = {
