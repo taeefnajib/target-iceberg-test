@@ -20,7 +20,7 @@ from .iceberg import singer_to_pyiceberg_schema
 class IcebergSink(BatchSink):
     """Iceberg target sink class."""
 
-    max_size = 100000
+    max_size = 10000
 
     def __init__(
         self,
@@ -48,9 +48,10 @@ class IcebergSink(BatchSink):
         self.logger.info("<<<<<Batch Started Processing>>>>>")
 
         # Create pyarrow df
-        fields_to_drop = ["_sdc_deleted_at", "_sdc_table_version", "_sdc_extracted_at", "_sdc_sequence", "_sdc_batched_at", "_sdc_received_at"]
-        df = pa.Table.from_pylist(context["records"])
+        fields_to_drop = ["_sdc_deleted_at", "_sdc_table_version"]
+        df = pa.Table.from_pylist(context["records"], schema=self.schema)
         df_narrow = df.drop_columns(fields_to_drop)
+        self.logger.info(f"df_narrow has: {df_narrow.columns}")
 
         # Load the Iceberg catalog
         # IMPORTANT: Make sure pyiceberg catalog env variables are set in the host machine - i.e. PYICEBERG_CATALOG__DEFAULT__URI, etc
@@ -93,6 +94,7 @@ class IcebergSink(BatchSink):
         singer_schema = self.schema
         singer_schema_narrow = singer_schema
         singer_schema_narrow["properties"] = {x: singer_schema["properties"][x] for x in singer_schema["properties"] if x not in fields_to_drop}
+        self.logger.info(f"singer_schema_narrow has: {singer_schema_narrow}")
 
         try:
             table = catalog.load_table(table_id)
@@ -102,6 +104,7 @@ class IcebergSink(BatchSink):
         except NoSuchTableError as e:
             # Table doesn't exist, so create it
             table_schema = singer_to_pyiceberg_schema(self, singer_schema_narrow)
+            self.logger.info(f"table schema has: {table_schema}")
             table = catalog.create_table(table_id, schema=table_schema)
             self.logger.info(f"Table '{table_id}' created")
 
