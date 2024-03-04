@@ -116,9 +116,4 @@ class IcebergSink(BatchSink):
         
         duration_seconds = end_time - start_time  # Calculate the duration
 
-        df_pandas = df_narrow.to_pandas()
-        missing_values_count = df_pandas.isna().sum()
-
-        self.logger.info(f"Number of null values in df_narrow: {missing_values_count}")
-
         self.logger.info(f"Batch Processing Duration: {duration_seconds} seconds")
