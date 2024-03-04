@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 import os
+import time
 from itertools import islice
 from typing import Dict, List, Optional
 from singer_sdk import PluginBase
@@ -43,6 +44,8 @@ class IcebergSink(BatchSink):
         Args:
             context: Stream partition or context dictionary.
         """
+        start_time = time.time()
+        self.logger.info("<<<<<Batch Started Processing>>>>>")
 
         # Get the first few items of the context for debugging
         n_items = dict(islice(context.items(), 3))
@@ -115,3 +118,9 @@ class IcebergSink(BatchSink):
 
         # Add data to the table
         table.append(df)
+
+        end_time = time.time()  # Record the end time
+        
+        duration_seconds = end_time - start_time  # Calculate the duration
+
+        self.logger.info(f"Batch Processing Duration: {duration_seconds} seconds")
