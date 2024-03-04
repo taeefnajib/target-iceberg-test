@@ -48,7 +48,7 @@ class IcebergSink(BatchSink):
         self.logger.info("<<<<<Batch Started Processing>>>>>")
 
         # Create pyarrow df
-        fields_to_drop = ["_sdc_deleted_at", "_sdc_table_version"]
+        fields_to_drop = ["_sdc_deleted_at", "_sdc_table_version", "_sdc_extracted_at", "_sdc_sequence", "_sdc_batched_at", "_sdc_received_at"]
         df = pa.Table.from_pylist(context["records"])
         df_narrow = df.drop_columns(fields_to_drop)
 
@@ -101,14 +101,13 @@ class IcebergSink(BatchSink):
             # TODO: Handle schema evolution - compare existing table schema with singer schema (converted to pyiceberg schema)
         except NoSuchTableError as e:
             # Table doesn't exist, so create it
-            # table_schema = singer_to_pyiceberg_schema(self, singer_schema_narrow)
-            table_schema = singer_to_pyiceberg_schema(self, singer_schema)
+            table_schema = singer_to_pyiceberg_schema(self, singer_schema_narrow)
             table = catalog.create_table(table_id, schema=table_schema)
             self.logger.info(f"Table '{table_id}' created")
 
         # Add data to the table
-        # table.append(df_narrow)
-        table.append(df)
+        table.append(df_narrow)
+        
 
         end_time = time.time()  # Record the end time
         
