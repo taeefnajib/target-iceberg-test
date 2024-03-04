@@ -51,8 +51,7 @@ class IcebergSink(BatchSink):
         fields_to_drop = ["_sdc_deleted_at", "_sdc_table_version"]
         df = pa.Table.from_pylist(context["records"])
         df_narrow = df.drop_columns(fields_to_drop)
-        # self.logger.info(f"context record looks like this: {context['records']}")
-
+        
         # Load the Iceberg catalog
         # IMPORTANT: Make sure pyiceberg catalog env variables are set in the host machine - i.e. PYICEBERG_CATALOG__DEFAULT__URI, etc
         #   - For more details, see: https://py.iceberg.apache.org/configuration/)
