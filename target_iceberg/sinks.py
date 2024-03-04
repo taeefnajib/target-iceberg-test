@@ -49,7 +49,7 @@ class IcebergSink(BatchSink):
 
         # Create pyarrow df
         fields_to_drop = ["_sdc_deleted_at", "_sdc_table_version"]
-        df = pa.Table.from_pylist(context["records"], schema=self.schema)
+        df = pa.Table.from_pylist(context["records"])
         df_narrow = df.drop_columns(fields_to_drop)
         self.logger.info(f"df_narrow has: {df_narrow.columns}")
 
