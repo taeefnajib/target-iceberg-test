@@ -20,15 +20,7 @@ from .iceberg import singer_to_pyiceberg_schema
 class IcebergSink(BatchSink):
     """Iceberg target sink class."""
 
-    def max_size(self) -> int:
-        """Get maximum batch size.
-
-        Returns:
-            Maximum batch size
-        """
-        return self.config.get("max_batch_size", 10000)
-
-    max_size = max_size()  # Max records to write in one batch
+    max_size = 100000
 
     def __init__(
         self,
