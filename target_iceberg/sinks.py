@@ -20,7 +20,6 @@ from .iceberg import singer_to_pyiceberg_schema
 class IcebergSink(BatchSink):
     """Iceberg target sink class."""
 
-    @property
     def max_size(self) -> int:
         """Get maximum batch size.
 
