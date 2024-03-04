@@ -19,7 +19,7 @@ from .iceberg import singer_to_pyiceberg_schema
 
 class IcebergSink(BatchSink):
     """Iceberg target sink class."""
-    
+
     @property
     def max_size(self) -> int:
         """Get maximum batch size.
@@ -29,7 +29,7 @@ class IcebergSink(BatchSink):
         """
         return self.config.get("max_batch_size", 10000)
 
-    max_size = 10000  # Max records to write in one batch
+    max_size = max_size()  # Max records to write in one batch
 
     def __init__(
         self,
@@ -110,7 +110,7 @@ class IcebergSink(BatchSink):
             # TODO: Handle schema evolution - compare existing table schema with singer schema (converted to pyiceberg schema)
         except NoSuchTableError as e:
             # Table doesn't exist, so create it
-            table_schema = singer_to_pyiceberg_schema(self, singer_schema)
+            table_schema = singer_to_pyiceberg_schema(self, singer_schema_narrow)
             table = catalog.create_table(table_id, schema=table_schema)
             self.logger.info(f"Table '{table_id}' created")
 
