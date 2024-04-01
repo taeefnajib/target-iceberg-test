@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 import os
-import time
-from itertools import islice
 from typing import Dict, List, Optional
 from singer_sdk import PluginBase
 from singer_sdk.sinks import BatchSink
@@ -15,12 +13,11 @@ from pyarrow import fs
 
 from .iceberg import singer_to_pyiceberg_schema
 
-       
 
 class IcebergSink(BatchSink):
     """Iceberg target sink class."""
 
-    max_size = 10000
+    max_size = 10000  # Max records to write in one batch
 
     def __init__(
         self,
@@ -44,14 +41,12 @@ class IcebergSink(BatchSink):
         Args:
             context: Stream partition or context dictionary.
         """
-        start_time = time.time()
-        self.logger.info("<<<<<Batch Started Processing>>>>>")
 
         # Create pyarrow df
         fields_to_drop = ["_sdc_deleted_at", "_sdc_table_version"]
         df = pa.Table.from_pylist(context["records"])
         df_narrow = df.drop_columns(fields_to_drop)
-        
+
         # Load the Iceberg catalog
         # IMPORTANT: Make sure pyiceberg catalog env variables are set in the host machine - i.e. PYICEBERG_CATALOG__DEFAULT__URI, etc
         #   - For more details, see: https://py.iceberg.apache.org/configuration/)
@@ -93,7 +88,6 @@ class IcebergSink(BatchSink):
         singer_schema = self.schema
         singer_schema_narrow = singer_schema
         singer_schema_narrow["properties"] = {x: singer_schema["properties"][x] for x in singer_schema["properties"] if x not in fields_to_drop}
-        self.logger.info(f"singer_schema_narrow has: {singer_schema_narrow}")
 
         try:
             table = catalog.load_table(table_id)
@@ -102,17 +96,9 @@ class IcebergSink(BatchSink):
             # TODO: Handle schema evolution - compare existing table schema with singer schema (converted to pyiceberg schema)
         except NoSuchTableError as e:
             # Table doesn't exist, so create it
-            table_schema = singer_to_pyiceberg_schema(self, singer_schema_narrow)
-            self.logger.info(f"table schema has: {table_schema}")
+            table_schema = singer_to_pyiceberg_schema(self, singer_schema)
             table = catalog.create_table(table_id, schema=table_schema)
             self.logger.info(f"Table '{table_id}' created")
 
         # Add data to the table
         table.append(df_narrow)
-        
-
-        end_time = time.time()  # Record the end time
-        
-        duration_seconds = end_time - start_time  # Calculate the duration
-
-        self.logger.info(f"Batch Processing Duration: {duration_seconds} seconds")
