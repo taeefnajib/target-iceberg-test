@@ -46,8 +46,8 @@ class IcebergSink(BatchSink):
         fields_to_drop = []
         # fields_to_drop = ["_sdc_deleted_at", "_sdc_table_version"]
         df = pa.Table.from_pylist(context["records"])
-        
-        df_narrow = df.drop_columns(fields_to_drop)
+        df_narrow = df
+        # df_narrow = df.drop_columns(fields_to_drop)
         
 
         # Load the Iceberg catalog
