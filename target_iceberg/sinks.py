@@ -45,11 +45,9 @@ class IcebergSink(BatchSink):
         # Create pyarrow df
         fields_to_drop = ["_sdc_deleted_at", "_sdc_table_version"]
         df = pa.Table.from_pylist(context["records"])
-        self.logger.info("========================================")
-        self.logger.info(f"The columns of df are: {df.columns}")
+        
         df_narrow = df.drop_columns(fields_to_drop)
-        self.logger.info("========================================")
-        self.logger.info(f"The columns of df_narrow are: {df_narrow.columns}")
+        
 
         # Load the Iceberg catalog
         # IMPORTANT: Make sure pyiceberg catalog env variables are set in the host machine - i.e. PYICEBERG_CATALOG__DEFAULT__URI, etc
@@ -94,14 +92,13 @@ class IcebergSink(BatchSink):
         singer_schema = self.schema
         singer_schema_narrow = singer_schema
         singer_schema_narrow["properties"] = {x: singer_schema["properties"][x] for x in singer_schema["properties"] if x not in fields_to_drop}
-        self.logger.info("========================================")
-        self.logger.info(f"This is the singer_schema_narrow: {singer_schema_narrow}")
+       
         # Remove _sdc_deleted_at and _sdc_table_version from the schema definition
         singer_schema_narrow["properties"].pop("_sdc_deleted_at", None)
         singer_schema_narrow["properties"].pop("_sdc_table_version", None)
+        print("===========",singer_schema_narrow)
         table_schema = singer_to_pyiceberg_schema(self, singer_schema_narrow)
-        self.logger.info("========================================")
-        self.logger.info(f"This is the table_schema: {table_schema}")
+        
         try:
             table = catalog.load_table(table_id)
             self.logger.info(f"Table '{table_id}' loaded")
