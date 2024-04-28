@@ -93,12 +93,6 @@ class IcebergSink(BatchSink):
         singer_schema = self.schema
         singer_schema_narrow = singer_schema
         singer_schema_narrow["properties"] = {x: singer_schema["properties"][x] for x in singer_schema["properties"] if x not in fields_to_drop}
-       
-        # Remove _sdc_deleted_at and _sdc_table_version from the schema definition
-        singer_schema_narrow["properties"].pop("_sdc_deleted_at", None)
-        singer_schema_narrow["properties"].pop("_sdc_table_version", None)
-        print("===========",singer_schema_narrow)
-        table_schema = singer_to_pyiceberg_schema(self, singer_schema_narrow)
         
         try:
             table = catalog.load_table(table_id)
